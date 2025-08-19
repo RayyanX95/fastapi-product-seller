@@ -31,6 +31,16 @@ def get_product(id: int, db: Session = Depends(get_db)):
     raise HTTPException(status_code=404, detail="Product not found")
 
 
+@app.delete("/product/{id}")
+def delete_product(id: int, db: Session = Depends(get_db)):
+    product = db.query(models.Product).filter(models.Product.id == id).first()
+    if product:
+        db.delete(product)
+        db.commit()
+        return {"message": "Product deleted successfully"}
+    raise HTTPException(status_code=404, detail="Product not found")
+
+
 @app.post("/add_product")
 def add(request: schemas.Product, db: Session = Depends(get_db)):
     new_product = models.Product(
