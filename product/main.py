@@ -41,6 +41,22 @@ def delete_product(id: int, db: Session = Depends(get_db)):
     raise HTTPException(status_code=404, detail="Product not found")
 
 
+@app.put("/product/{id}")
+def update_product(
+    id: int, request: schemas.ProductUpdate, db: Session = Depends(get_db)
+):
+    product = db.query(models.Product).filter(models.Product.id == id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    update_data = request.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(product, key, value)
+    db.commit()
+    db.refresh(product)
+    return product
+
+
 @app.post("/add_product")
 def add(request: schemas.Product, db: Session = Depends(get_db)):
     new_product = models.Product(
