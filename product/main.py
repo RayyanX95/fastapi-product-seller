@@ -1,4 +1,6 @@
-from fastapi import FastAPI, HTTPException
+from typing import List
+
+from fastapi import FastAPI, HTTPException, status
 from fastapi.params import Depends
 from sqlalchemy.orm import Session
 
@@ -18,12 +20,12 @@ def get_db():
         db.close()
 
 
-@app.get("/products")
+@app.get("/products", response_model=List[schemas.DisplayProduct])
 def products(db: Session = Depends(get_db)):
     return db.query(models.Product).all()
 
 
-@app.get("/products/{id}")
+@app.get("/products/{id}", response_model=schemas.DisplayProduct)
 def get_product(id: int, db: Session = Depends(get_db)):
     product = db.query(models.Product).filter(models.Product.id == id).first()
     if product:
@@ -57,7 +59,7 @@ def update_product(
     return product
 
 
-@app.post("/add_product")
+@app.post("/add_product", status_code=status.HTTP_201_CREATED)
 def add(request: schemas.Product, db: Session = Depends(get_db)):
     new_product = models.Product(
         name=request.name, description=request.description, price=request.price
@@ -71,3 +73,15 @@ def add(request: schemas.Product, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_product)
     return {"message": "Product added successfully", "product": new_product}
+
+
+@app.post("/seller")
+def create_seller(request: schemas.Seller, db: Session = Depends(get_db)):
+    new_seller = models.Seller(
+        username=request.username, email=request.email, password=request.password
+    )
+
+    db.add(new_seller)
+    db.commit()
+    db.refresh(new_seller)
+    return {"message": "Seller created successfully", "seller": new_seller}
