@@ -2,6 +2,7 @@ from typing import List
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.params import Depends
+from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from . import models, schemas
@@ -10,6 +11,8 @@ from .database import SessionLocal, engine
 app = FastAPI()
 
 models.Base.metadata.create_all(engine)
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def get_db():
@@ -62,7 +65,10 @@ def update_product(
 @app.post("/add_product", status_code=status.HTTP_201_CREATED)
 def add(request: schemas.Product, db: Session = Depends(get_db)):
     new_product = models.Product(
-        name=request.name, description=request.description, price=request.price
+        name=request.name,
+        description=request.description,
+        price=request.price,
+        seller_id=1,
     )
 
     print(
@@ -75,13 +81,14 @@ def add(request: schemas.Product, db: Session = Depends(get_db)):
     return {"message": "Product added successfully", "product": new_product}
 
 
-@app.post("/seller")
+@app.post("/seller", response_model=schemas.DisplaySeller)
 def create_seller(request: schemas.Seller, db: Session = Depends(get_db)):
+    hashed_password = pwd_context.hash(request.password)
     new_seller = models.Seller(
-        username=request.username, email=request.email, password=request.password
+        username=request.username, email=request.email, password=hashed_password
     )
 
     db.add(new_seller)
     db.commit()
     db.refresh(new_seller)
-    return {"message": "Seller created successfully", "seller": new_seller}
+    return new_seller
