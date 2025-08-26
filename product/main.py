@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import models
 from .database import engine
-from .routers import product, seller
+from .routers import login, product, seller
 
 app = FastAPI(
     title="Product Management API",
@@ -47,5 +47,6 @@ app.add_middleware(
 
 app.include_router(product.router)
 app.include_router(seller.router)
+app.include_router(login.router)
 
 models.Base.metadata.create_all(engine)
