@@ -1,12 +1,9 @@
-from fastapi import FastAPI, status
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.params import Depends
-from passlib.context import CryptContext
-from sqlalchemy.orm import Session
 
-from . import models, schemas
-from .database import SessionLocal, engine, get_db
-from .routers import product
+from . import models
+from .database import engine
+from .routers import product, seller
 
 app = FastAPI(
     title="Product Management API",
@@ -49,40 +46,6 @@ app.add_middleware(
 )
 
 app.include_router(product.router)
+app.include_router(seller.router)
 
 models.Base.metadata.create_all(engine)
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-@app.post(
-    "/seller",
-    response_model=schemas.DisplaySeller,
-    status_code=status.HTTP_201_CREATED,
-    tags=["Sellers"],
-    summary="Create a seller account",
-    description="Register a new seller. Passwords are hashed before storage; the returned seller does not include the password field.",
-    responses={
-        201: {"description": "Seller created successfully"},
-        400: {"description": "Invalid input"},
-    },
-    operation_id="createSeller",
-)
-def create_seller(request: schemas.Seller, db: Session = Depends(get_db)):
-    hashed_password = pwd_context.hash(request.password)
-    new_seller = models.Seller(
-        username=request.username, email=request.email, password=hashed_password
-    )
-
-    db.add(new_seller)
-    db.commit()
-    db.refresh(new_seller)
-    return new_seller
