@@ -7,13 +7,12 @@ from sqlalchemy.orm import Session
 from .. import models, schemas
 from ..database import get_db
 
-router = APIRouter()
+router = APIRouter(tags=["Products"], prefix="/api/v1/products")
 
 
 @router.get(
-    "/products",
+    "/",
     response_model=List[schemas.DisplayProduct],
-    tags=["Products"],
     summary="List all products",
     description="Retrieve a list of all products. Supports pagination and filtering in future iterations.",
     response_description="A JSON array of product objects",
@@ -29,9 +28,8 @@ def products(db: Session = Depends(get_db)):
 
 
 @router.get(
-    "/products/{id}",
+    "/{id}",
     response_model=schemas.DisplayProduct,
-    tags=["Products"],
     summary="Get product by ID",
     description="Retrieve a single product by its unique ID.",
     responses={
@@ -48,8 +46,7 @@ def get_product(id: int, db: Session = Depends(get_db)):
 
 
 @router.delete(
-    "/product/{id}",
-    tags=["Products"],
+    "/{id}",
     summary="Delete a product",
     description="Delete a product by its ID. Returns a success message on deletion.",
     responses={
@@ -75,9 +72,8 @@ def delete_product(id: int, db: Session = Depends(get_db)):
 
 
 @router.put(
-    "/product/{id}",
+    "/{id}",
     response_model=schemas.DisplayProduct,
-    tags=["Products"],
     summary="Update a product",
     description="Update one or more fields of a product. Send only the fields to be updated.",
     responses={
@@ -103,9 +99,8 @@ def update_product(
 
 
 @router.post(
-    "/add_product",
+    "/",
     status_code=status.HTTP_201_CREATED,
-    tags=["Products"],
     summary="Create a new product",
     description="Create a new product. The current implementation assigns seller_id=1 by default.",
     responses={

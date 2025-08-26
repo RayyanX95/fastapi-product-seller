@@ -9,14 +9,13 @@ from ..database import get_db
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1", tags=["Sellers"])
 
 
 @router.post(
     "/seller",
     response_model=schemas.DisplaySeller,
     status_code=status.HTTP_201_CREATED,
-    tags=["Sellers"],
     summary="Create a seller account",
     description="Register a new seller. Passwords are hashed before storage; the returned seller does not include the password field.",
     responses={
